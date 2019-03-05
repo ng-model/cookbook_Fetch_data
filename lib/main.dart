@@ -1,74 +1,95 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-Future<Post> fetchPost() async {
+Future<List<Post>> fetchPost(http.Client client) async {
   final response =
-      await http.get('https://jsonplaceholder.typicode.com/posts/1');
+      await http.get('https://jsonplaceholder.typicode.com/posts/1/comments');
 
-  if (response.statusCode == 200) {
-    // If the call to the server was successful, parse the JSON
-    return Post.fromJson(json.decode(response.body));
-  } else {
-    // If that call was not successful, throw an error.
-    throw Exception('Failed to load post');
-  }
+return compute(parsePosts, response.body);
 }
-
+List<Post> parsePosts(String responseBody){
+  final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+  return parsed.map<Post>((json) =>Post.fromJson(json)).toList();
+}
 class Post {
-  final int userId;
+  final int postId;
   final int id;
-  final String title;
+  final String name;
+  final String email;
   final String body;
 
-  Post({this.userId, this.id, this.title, this.body});
+  Post({this.postId, this.id, this.name, this.email, this.body});
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      userId: json['userId'],
+      postId: json['postId'],
       id: json['id'],
-      title: json['title'],
+      name: json['name'],
+      email: json['email'],
       body: json['body'],
     );
   }
 }
 
-void main() => runApp(MyApp(post: fetchPost()));
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  final Future<Post> post;
-
-  MyApp({Key key, this.post}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
+    final appTitle = 'serialization';
     return MaterialApp(
-      title: 'Fetch Data Example',
+      title: appTitle,
+      home: MyHomePage(title: appTitle),
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Fetch Data Example'),
-        ),
-        body: Center(
-          child: FutureBuilder<Post>(
-            future: post,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data.body);
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
+        );
+  }
+}
+class MyHomePage extends StatelessWidget {
+  final String title;
+  MyHomePage({Key key, this.title}) : super(key: key);
 
-              // By default, show a loading spinner
-              return CircularProgressIndicator();
-            },
-          ),
-        ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
       ),
+      body: FutureBuilder<List<Post>>(
+        future: fetchPost(http.Client()),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) print(snapshot.error);
+
+          return snapshot.hasData
+              ? PostList(post: snapshot.data)
+              : Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+class PostList extends StatelessWidget {
+  final List<Post> post;
+final _biggerFont = const TextStyle(fontSize: 18.0);
+  PostList({Key key, this.post}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      //   crossAxisCount: 2,
+      // ),
+      itemCount: post.length,
+      itemBuilder: (context, index) {
+        return  Text(post[index].email,
+        style: _biggerFont
+        );
+      },
     );
   }
 }
