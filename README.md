@@ -4,7 +4,7 @@ A new Flutter project.
 
 ## Getting Started
 
-<img src="https://github.com/ng-model/randomnamegenerator/blob/master/Screen%20Shot%202019-03-03%20at%2010.51.35%20AM.png?raw=true" height="700" width="414" alt="app">
+<img src="https://github.com/ng-model/cookbook_Fetch_data/blob/master/Screen%20Shot%202019-03-06%20at%2011.38.35%20AM.png" height="800" width="414" alt="app">
 
 
 This project is a starting point for a Flutter application.
